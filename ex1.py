@@ -1,5 +1,6 @@
-from collections import defaultdict
-FILE_NAME='exercise1.txt'
+from copy import deepcopy
+FILE_NAME='ex1_input.txt'
+DEBUG=False
 
 def line_parser(line):
     clauses = []
@@ -51,37 +52,39 @@ def resolve(clause1, clause2, p):
     return None
 
 
-def find_clauses(clauses):
-    for index, clause in enumerate(clauses):
-        for index_combine, clause_combine in enumerate(clauses):
-            if index != index_combine:
-                for x in clause:
-                    resolve_attempt = resolve(clause, clause_combine, x)
-                    if resolve_attempt is not None and resolve_attempt not in clauses:
-                        return resolve_attempt
+def find_clauses(clauses, resolver):
+    for clause in clauses:
+        for x in resolver:
+            resolve_attempt = resolve(resolver, clause, x)
+            if resolve_attempt is not None and resolve_attempt not in clauses:
+                return resolve_attempt
     return None
 
 
 
-def resolution(clauses):
-    if ([] in clauses):
+def resolution(clauses, resolver):
+    if resolver == []:
         return False
 
-    new_clause = find_clauses(clauses)
-    # print(new_clause)
+    new_clause = find_clauses(clauses, resolver)
+    if DEBUG:
+        print(new_clause)
     if new_clause is None:
         return True
-    return resolution([*clauses, new_clause])
+    return resolution(clauses, new_clause)
 
-def execute_test(test):
+def execute_test(test, question):
     print("===================")
     print(f'Test: {test}')
-    status = resolution(test)
+    print(f'The question is: {question}')
+    status = resolution(test, question)
     print(f'Status: {status}')
     if status == False:
         print('Unsatisfiable')
+        print("Therefore the answer to the question is logically entailed")
     else:
         print('Satisfiable')
+        print("Therefore the answer to the question is NOT logically entailed")
     print("===================")
 
 questions = {
@@ -91,30 +94,49 @@ questions = {
     'dedication': 'Was the student dedicated for this exam? (yes/no)',
 }
 
+processing_answers = {
+    'studied': lambda x: int(x) >= 20,
+    'participation' : lambda x: int(x) >= 5 ,
+    'wakesup' : lambda x: int(x.split(':')[0]) < 8,
+    'dedication': lambda x: (True if x == 'yes' else False),
+}
+
+def get_answer_atoms(answers):
+    atoms = []
+    for key, answer in answers.items():
+        if answer:
+            atoms.append([key])
+        else:
+            atoms.append([negation(key)])
+    return atoms
+
 def main():
-    tests = []
+    horn_kb = []
     with open(FILE_NAME, 'r') as f:
         for line in f.readlines():
-            line = line[:-1]
-            clauses = line_parser(line)
-            tests.append(clauses)
-    print('Tests are:')
-    for clauses in tests:
-        print(clauses)
+            line = line.rstrip()
+            horn_kb = line_parser(line)
+    print('The horn KB is:')
+    for rule in horn_kb:
+        print(rule)
     
-    stopped = False
     while True:
-        print('Answer questions or type exit to stop:')
+        print('Do you want to continue (type exit otherwise)')
+        response = input()
+        if response == 'exit':
+            break
         answers = {}
         for key, question in questions.items():
             print(question)
             response = input(key + ":")
             answers[key] = response
-            if response == "exit":
-                stopped = True
-                break
-        if stopped:
-            break
+        processed_answers = {key: processing_answers[key](value) for key, value in answers.items()}
+        question_atoms = get_answer_atoms(processed_answers)
+        combined_kb = deepcopy(question_atoms + horn_kb)
+        if DEBUG:
+            print(combined_kb)
+
+        execute_test(combined_kb, [negation("pass")])
     
 
 if __name__ == '__main__':

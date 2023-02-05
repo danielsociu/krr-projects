@@ -1,7 +1,1 @@
-[[¬a,b],[c,d],[¬d,b],[¬b],[¬c,b],[e],[a,b,¬f,f]]
-[[¬workedhard,¬prepared,pass],
-[¬studied,¬understands,prepared],
-[¬participation,understands],
-[¬wakesup,early],
-[¬early,¬workedhard,ambitious]]
-
+[[¬dedication,¬prepared,pass],[¬studied,¬understands,prepared],[¬participation,understands],[¬wakesup,early],[¬early,¬dedication,ambitious]]
