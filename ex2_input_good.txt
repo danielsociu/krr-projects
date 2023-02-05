@@ -1,0 +1,3 @@
+[and,[outside/hot,desired/low],[heating/low]]
+[and,[outside/average,desired/medium],[heating/medium]]
+[or,[outside/cold,desired/high],[heating/high]]
