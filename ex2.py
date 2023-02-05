@@ -1,16 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-FILE_NAME='ex2_input.txt'
-PLOTTING=True
-SHOW=True
-DEBUG=False
+FILE_NAME = 'ex2_input.txt'
+PLOTTING = True
+SHOW = True
+DEBUG = False
+
 
 def real_score(key, value):
     if key == "outside":
         return value - 20
     else:
         return value + 10
+
 
 def line_parser(line):
     rules = []
@@ -21,7 +23,7 @@ def line_parser(line):
     while index < length:
         if line[index] == '[':
             rules.append([])
-        elif line[index] ==  ']' or line[index] == ',':
+        elif line[index] == ']' or line[index] == ',':
             if cur_str != '':
                 if len(rules):
                     rules[-1].append(cur_str)
@@ -34,14 +36,17 @@ def line_parser(line):
 
     return rules
 
+
 def my_linspace(start, end, elements):
     if elements == 1:
-        return np.array([max(start,end)])
+        return np.array([max(start, end)])
     return np.linspace(start, end, elements)
+
 
 def plot_all(predicate, show=False):
     for key, curve in predicate.items():
         curve.plot_curve(show)
+
 
 class Antecedent():
     def __init__(self, x, start_low, end_low, start_high, end_high, name='default'):
@@ -49,7 +54,7 @@ class Antecedent():
         self.end_low = end_low
         self.start_high = start_high
         self.end_high = end_high
-        self.name=name
+        self.name = name
         self.x = x
         self.curve = np.concatenate([
             np.zeros(start_low),
@@ -60,10 +65,10 @@ class Antecedent():
         ])
         if (start_high - end_low) == 0:
             self.curve = np.delete(self.curve, [end_low + 1])
-    
+
     def get_curve_value(self, score):
         value = 0
-        if int(score) != score:  
+        if int(score) != score:
             prior = int(score)
             next = prior + 1
             v1 = self.curve[prior]
@@ -93,7 +98,6 @@ class Antecedent():
 
         return antecedent
 
-    
     def plot_curve(self, show=False):
         plt.plot(self.x, self.curve, label=self.name)
         title = self.name.replace("/", "_")
@@ -102,16 +106,16 @@ class Antecedent():
         if show:
             plt.show()
         plt.close()
-    
+
     def plot_antecedent(self, score, show=False):
         antecedent = self.calculate_antecedent(score)
         base = np.zeros_like(antecedent)
         plt.fill_between(self.x, base, antecedent)
         plt.plot(self.x, self.curve, label=self.name)
-        title = self.name.replace("/", "_") + "antecedent_" + str(score) 
+        title = self.name.replace("/", "_") + "antecedent_" + str(score)
         plt.title(title)
         plt.savefig(
-            'plots/' + 
+            'plots/' +
             title +
             '.png'
         )
@@ -120,7 +124,6 @@ class Antecedent():
         plt.close()
 
 
-    
 outside = {
     "cold": Antecedent(np.arange(0, 61, 1), 0, 0, 0, 30, 'outside/cold'),
     "average": Antecedent(np.arange(0, 61, 1), 0, 30, 30, 60, 'outside/average'),
@@ -138,6 +141,7 @@ heating = {
     "medium": Antecedent(np.arange(0, 11, 1), 0, 5, 5, 10, 'heating/medium'),
     "high": Antecedent(np.arange(0, 11, 1), 5, 10, 10, 10, 'heating/high'),
 }
+
 
 def evaluate_antecedents(rule, scores, multiple_antecedents):
     antecedents = {}
@@ -163,32 +167,38 @@ def evaluate_antecedents(rule, scores, multiple_antecedents):
         result = value
     return result, antecedents
 
+
 def evaluate_rule(rule, scores):
     multiple_antecedents = type(rule[0]) is str
-    
-    antecedent_result, antecedents = evaluate_antecedents(rule, scores, multiple_antecedents)
+
+    antecedent_result, antecedents = evaluate_antecedents(
+        rule, scores, multiple_antecedents)
     conseq_str, conseq_type = rule[-1][0].split('/')
     conseq_func = eval(conseq_str)
-    consequent = conseq_func[conseq_type].calculate_consequent(antecedent_result)
+    consequent = conseq_func[conseq_type].calculate_consequent(
+        antecedent_result)
 
     return {rule[-1][0]: consequent}, antecedents
+
 
 def aggregate_consequents(consequents):
     aggregated_conseq = np.zeros(len(next(iter(consequents.values()))))
     for key, conseq in consequents.items():
         aggregated_conseq = np.fmax(aggregated_conseq, conseq)
-    
+
     return aggregated_conseq
 
-    
+
 def plot_aggregated_conseq(aggregated_conseq, predicates, scores, show=False):
     for key, pred in predicates.items():
         plt.plot(pred.x, pred.curve, 'r', label=pred.name)
-    
+
     zeros = np.zeros_like(pred.x)
     plt.fill_between(pred.x, zeros, aggregated_conseq, alpha=0.5)
 
-    title = 'Aggregated conseq ' + ' '.join(f'{key}={real_score(key, score)}' for key, score in scores.items())
+    title = 'Aggregated conseq ' + \
+        ' '.join(f'{key}={real_score(key, score)}' for key,
+                 score in scores.items())
     plt.title(title)
     plt.savefig('plots/' + title.replace(" ", "_") + '.png')
     if show:
@@ -239,9 +249,11 @@ def main():
         if DEBUG:
             print(aggregated_consequents)
         if PLOTTING:
-            plot_aggregated_conseq(aggregated_consequents, heating, scores, show=SHOW)
+            plot_aggregated_conseq(
+                aggregated_consequents, heating, scores, show=SHOW)
         defused_value = defuse(aggregated_consequents)
         print(f"The output is {defused_value}")
+
 
 if __name__ == '__main__':
     main()
