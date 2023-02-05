@@ -28,6 +28,9 @@ def negation(atom):
     else:
         return '¬' + atom
 
+def is_negation(atom):
+    return '¬' in atom
+
 def check_inclusion(list1, list2):
     return all([item in list2 for item in list1])
 
@@ -62,7 +65,7 @@ def find_clauses(clauses, resolver):
 
 
 
-def resolution(clauses, resolver):
+def resolution_backward(clauses, resolver):
     if resolver == []:
         return False
 
@@ -71,13 +74,40 @@ def resolution(clauses, resolver):
         print(new_clause)
     if new_clause is None:
         return True
-    return resolution(clauses, new_clause)
+    return resolution_backward(clauses, new_clause)
 
-def execute_test(test, question):
+def find_positive_atom(atoms, kb):
+    for clause in kb:
+        found = True
+        for x in clause:
+            if is_negation(x):
+                if [negation(x)] not in atoms:
+                    found = False
+        if found:
+            for x in clause:
+                if not is_negation(x):
+                    return [x]
+
+
+
+def resolution_forward(atoms, kb, question):
+    if question in atoms:
+        return False
+    
+    new_atom = find_positive_atom(atoms, kb)
+    if new_atom is None:
+        return True
+
+    return resolution_forward([new_atom, *atoms], kb, question)
+
+def execute_test(kb, atoms, question, type):
     print("===================")
-    print(f'Test: {test}')
+    print(f'Test: {kb + atoms}')
     print(f'The question is: {question}')
-    status = resolution(test, question)
+    if type == 'backward_chain':
+        status = resolution_backward(kb + atoms, question)
+    else:
+        status = resolution_forward(atoms, kb, question)
     print(f'Status: {status}')
     if status == False:
         print('Unsatisfiable')
@@ -136,7 +166,20 @@ def main():
         if DEBUG:
             print(combined_kb)
 
-        execute_test(combined_kb, [negation("pass")])
+        print("Output using backward chain:")
+        execute_test(
+            deepcopy(horn_kb), 
+            deepcopy(question_atoms), 
+            [negation("pass")]
+            algo_type='backward_chain'
+        )
+        print("Output using forward chain:")
+        execute_test(
+            deepcopy(horn_kb), 
+            deepcopy(question_atoms), 
+            [negation("pass")]
+            algo_type='forward_chain'
+        )
     
 
 if __name__ == '__main__':
