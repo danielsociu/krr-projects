@@ -1,6 +1,6 @@
 from copy import deepcopy
 FILE_NAME='ex1_input.txt'
-DEBUG=False
+DEBUG=True
 
 def line_parser(line):
     clauses = []
@@ -85,7 +85,7 @@ def find_positive_atom(atoms, kb):
                     found = False
         if found:
             for x in clause:
-                if not is_negation(x):
+                if not is_negation(x) and [x] not in atoms:
                     return [x]
 
 
@@ -95,17 +95,19 @@ def resolution_forward(atoms, kb, question):
         return False
     
     new_atom = find_positive_atom(atoms, kb)
+    if DEBUG:
+        print(new_atom)
     if new_atom is None:
         return True
 
     return resolution_forward([new_atom, *atoms], kb, question)
 
-def execute_test(kb, atoms, question, type):
+def execute_test(kb, atoms, question, algo_type="backward_chain"):
     print("===================")
     print(f'Test: {kb + atoms}')
     print(f'The question is: {question}')
-    if type == 'backward_chain':
-        status = resolution_backward(kb + atoms, question)
+    if algo_type == 'backward_chain':
+        status = resolution_backward(kb + atoms, [negation(quest) for quest in question])
     else:
         status = resolution_forward(atoms, kb, question)
     print(f'Status: {status}')
@@ -170,14 +172,14 @@ def main():
         execute_test(
             deepcopy(horn_kb), 
             deepcopy(question_atoms), 
-            [negation("pass")]
+            ["pass"],
             algo_type='backward_chain'
         )
         print("Output using forward chain:")
         execute_test(
             deepcopy(horn_kb), 
             deepcopy(question_atoms), 
-            [negation("pass")]
+            ["pass"],
             algo_type='forward_chain'
         )
     
